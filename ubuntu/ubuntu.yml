@@ -1,0 +1,34 @@
+# Définition du playbook
+---
+- name: deploy  # Nom du playbook
+  hosts: all  # Groupes d'hôtes sur lesquels exécuter les tâches
+  gather_facts: false  # Désactive la collecte automatique des faits
+  become: true  # Utilise le privilège "become" pour exécuter les tâches avec droits élevés (root)
+  
+  tasks:  # Définition des tâches à effectuer
+    - name: create user  # Nom de la première tâche
+      user:  # Module Ansible pour gérer les utilisateurs
+        name: tux  # Nom de l'utilisateur à créer
+        state: present  # L'état souhaité de l'utilisateur (présent)
+        shell: /bin/bash  # Shell de l'utilisateur
+        password: "{{ 'Password1' | password_hash('sha512') }}"  # Mot de passe haché pour l'utilisateur
+        update_password: on_create  # Mettre à jour le mot de passe uniquement lors de la création
+        
+    - name: sshd password  # Nom de la deuxième tâche
+      lineinfile:  # Module pour modifier une ligne dans un fichier
+        path: /etc/ssh/sshd_config  # Chemin du fichier de configuration SSH
+        regexp: '^PasswordAuthentication '  # Expression régulière pour trouver la ligne à modifier
+        insertafter: '#PasswordAuthentication'  # Insérer après la ligne avec ce commentaire
+        line: 'PasswordAuthentication yes'  # Remplacer la ligne par celle-ci
+      notify: restart_sshd  # Notifie le gestionnaire "restart_sshd" après cette tâche
+      
+    - name: sudo  # Nom de la troisième tâche
+      copy:  # Module pour copier des fichiers
+        dest: /etc/sudoers.d/tux  # Chemin de destination du fichier
+        content: "tux ALL=(root) NOPASSWD: ALL"  # Contenu du fichier à copier
+        
+  handlers:  # Définition des gestionnaires
+    - name: restart_sshd  # Nom du gestionnaire
+      service:  # Module pour gérer les services
+        name: sshd  # Nom du service SSH
+        state: restarted  # Redémarrer le service SSH
