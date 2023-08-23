@@ -1,0 +1,12 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "bento/ubuntu-20.04-arm64"
+  config.vm.hostname = "ubuntu"
+  config.vm.provision "ansible", playbook: "ubuntu.yml"
+  config.vm.network "private_network"
+  config.vm.provider "vmware_desktop" do |vb|
+    vb.memory = "2048"
+  end
+end
