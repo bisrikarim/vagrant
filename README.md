@@ -1,2 +1,2 @@
 # vagrant
-Vagrant machines config files 
+Vagrant machines config file
